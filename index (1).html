@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="./style.css">
+<button id="checkout">Checkout</button>
+
+  <!--
+    MSIT Kolkata Canteen — FULL FRONTEND DEMO
+    Features:
+    - Red header with white college name (no logo)
+    - White nav bar
+    - Home, Recipes, Cart, Payments, Contact
+    - Recipe cards (ingredients, steps, price, add to cart)
+    - Time select + Prepare for prep items
+    - Cart: qty controls, remove, totals
+    - Payments: UPI, QR, Card, COD (frontend only)
+    - False Payment strip (global, bottom) to simulate without real transaction
+    - Order tracking with progress bar and status
+    - Notification at selected time; browser Notification API
+    - Responsive layout
+    - Helpline strip at bottom
+    Tech: Pure HTML + CSS + JS in one file
+  -->
+
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Meghnad Saha Institute of Technology — MSIT Kolkata Canteen</title>
+
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="title">
+      <h1>Meghnad Saha Institute of Technology, Kolkata</h1>
+      <p>Canteen · Cart · Prepare · Payments · Notifications</p>
+    </div>
+    <a class="college-link" href="https://msit.edu.in" target="_blank" rel="noopener">Visit College Site</a>
+  </header>
+
+  <!-- Navigation -->
+  <nav>
+    <a href="#home">Home</a>
+    <a href="#recipes">Recipes</a>
+    <a href="#cart">Cart</a>
+    <a href="#payments">Payments</a>
+    <a href="#contact">Contact</a>
+  </nav>
+
+  <!-- Main grid layout -->
+  <div class="container">
+    <!-- Home -->
+    <section id="home" class="card home" aria-label="Home section">
+      <div class="card-h">
+        <div class="card-title">About MSIT Kolkata</div>
+        <span class="badge">Nazirabad · EM Bypass</span>
+      </div>
+      <div class="card-b">
+        <p><strong>Meghnad Saha Institute of Technology (MSIT)</strong> is a leading engineering college in Kolkata known for practical projects, hackathons, and a vibrant student community.</p>
+        <p><strong>Canteen overview:</strong> Browse items, add to cart, choose delivery time for prep items, confirm prepare (with payment or False payment), and get notified at your chosen time when food is ready.</p>
+        <div class="pill">Open hours: 9:00 AM – 5:00 PM · Recess: 2:00 PM</div>
+      </div>
+    </section>
+
+    <!-- Recipes -->
+    <section id="recipes" class="card" style="grid-column:1;" aria-label="Recipes section">
+      <div class="card-h">
+        <div class="card-title">Popular canteen recipes</div>
+        <span class="badge">Budget friendly</span>
+      </div>
+      <div class="card-b">
+        <div class="grid" id="recipe-grid"><!-- JS will render recipe cards --></div>
+      </div>
+    </section>
+
+    <!-- Cart -->
+    <aside id="cart" class="card" style="grid-column:2;" aria-label="Cart section">
+      <div class="card-h cart-header">
+        <div class="card-title">Your cart</div>
+        <span class="badge" id="cart-count">0 items</span>
+      </div>
+      <div class="cart-body" id="cart-items"><!-- JS will render cart rows --></div>
+      <div class="cart-footer">
+        <div class="total">
+          <span class="label">Subtotal</span>
+          <strong id="cart-total">₹0</strong>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap">
+          <button class="btn btn-outline" id="clear-cart">Clear</button>
+          <button class="btn btn-primary" id="checkout">Checkout</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Payments -->
+    <section id="payments" class="card" style="grid-column:2;" aria-label="Payments section">
+      <div class="card-h">
+        <div class="card-title">Payment options (frontend demo)</div>
+        <span class="badge">Choose a method</span>
+      </div>
+      <div class="card-b payments">
+        <!-- UPI -->
+        <div class="method">
+          <input type="radio" name="paymethod" id="upi" value="UPI" checked/>
+          <label for="upi">UPI</label>
+        </div>
+        <div class="pay-box" id="upi-box">
+          <div class="pay-row">
+            <input class="input" type="text" id="upi-id" placeholder="Enter UPI ID (e.g., name@okhdfcbank)" aria-label="UPI ID"/>
+            <button class="pay-btn" id="upi-pay" aria-label="Pay via UPI">Pay via UPI</button>
+          </div>
+          <p class="muted">Demo only. In production, integrate Razorpay/Paytm/PhonePe SDK.</p>
+        </div>
+
+        <!-- QR -->
+        <div class="method" style="margin-top:12px">
+          <input type="radio" name="paymethod" id="qr" value="QR"/>
+          <label for="qr">Scan QR</label>
+        </div>
+        <div class="pay-box" id="qr-box" style="display:none">
+          <div class="pay-row">
+            <div class="qr-box" aria-label="QR image placeholder">QR IMG</div>
+            <div>
+              <p class="muted">Scan the QR with your UPI app and complete payment.</p>
+              <button class="pay-btn" id="qr-confirm" aria-label="Confirm QR payment">I have paid</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card -->
+        <div class="method" style="margin-top:12px">
+          <input type="radio" name="paymethod" id="card" value="CARD"/>
+          <label for="card">Card</label>
+        </div>
+        <div class="pay-box" id="card-box" style="display:none">
+          <div class="pay-row" style="flex-direction:column; align-items:flex-start">
+            <input class="input" type="text" id="card-number" placeholder="Card number" aria-label="Card number"/>
+            <div class="pay-row">
+              <input class="input" type="text" id="card-exp" placeholder="MM/YY" aria-label="Card expiry"/>
+              <input class="input" type="text" id="card-cvv" placeholder="CVV" aria-label="Card CVV"/>
+            </div>
+            <button class="pay-btn" id="card-pay" aria-label="Pay via card">Pay via Card</button>
+          </div>
+        </div>
+
+        <!-- COD -->
+        <div class="method" style="margin-top:12px">
+          <input type="radio" name="paymethod" id="cod" value="COD"/>
+          <label for="cod">Cash on Delivery (Pickup)</label>
+        </div>
+        <div class="pay-box" id="cod-box" style="display:none">
+          <p class="muted">Pay at the counter during pickup.</p>
+          <button class="pay-btn" id="cod-confirm" aria-label="Confirm COD">Confirm COD</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Contact -->
+  <section id="contact" class="card" style="max-width:1200px; margin:0 auto 22px; padding:0 16px;" aria-label="Contact section">
+    <div class="card-h">
+      <div class="card-title">Contact</div>
+      <span class="badge">Support</span>
+    </div>
+    <div class="card-b">
+      <p class="muted">For queries, contact canteen staff or visit the official MSIT website.</p>
+    </div>
+  </section>
+
+  <!-- False Payment strip (global) -->
+  <div class="false-strip" aria-label="False payment demo strip">
+    <strong>False Payment (Simulate for demo)</strong>
+    <div class="line">Proceed without real payment to showcase instant and scheduled notifications.</div>
+    <button class="btn-false" id="false-pay">Proceed (No Payment)</button>
+  </div>
+
+  <!-- Helpline -->
+  <div class="helpline">📞 Contact with canteen staff for any support</div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="alert" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal">
+      <div class="modal-header">
+        <strong id="modal-title">Confirm prepare</strong>
+        <button class="close-x" id="modal-close" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body" id="modal-body">
+        Select a payment method (or False Payment strip below) to start preparing your item at your chosen time.
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="modal-cancel">Cancel</button>
+        <button class="btn btn-primary" id="modal-ok">Okay</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ====== Demo data: recipes ======
+    // prep=true means item requires scheduled preparation
+    const recipes = [
+      { id:'egg-roll',    name:'Egg Roll',     price:45, emoji:'🥚', ingredients:'Paratha, egg, onion, chutney, masala', steps:'Cook egg on paratha, fill, roll, serve', prep:true },
+      { id:'paneer-roll', name:'Paneer Roll',  price:55, emoji:'🌯', ingredients:'Roti, paneer, onion, capsicum, spices', steps:'Stir-fry paneer + veggies, wrap in roti', prep:true },
+      { id:'cold-coffee', name:'Cold Coffee',  price:40, emoji:'🥤', ingredients:'Milk, coffee powder, sugar, ice', steps:'Blend milk + coffee + sugar, add ice', prep:true },
+      { id:'maggi',       name:'Maggi Masala', price:30, emoji:'🍜', ingredients:'Maggi noodles, water, masala packet, veggies', steps:'Boil water, add noodles + masala', prep:false },
+      { id:'veg-patties', name:'Veg Patties',  price:25, emoji:'🥟', ingredients:'Potato, peas, spices, breadcrumbs', steps:'Mash, season, shape, shallow fry', prep:false },
+      { id:'lemonade',    name:'Fresh Lemonade', price:20, emoji:'🍋', ingredients:'Lemon, sugar, salt, chilled water', steps:'Mix lemon + sugar + salt, add ice', prep:false },
+    ];
+
+    // ====== State: cart Map id -> item ======
+    // item: {id,name,price,qty,time,status,timerId,progress}
+    // status: 'pending' | 'preparing' | 'ready'
+    const cart = new Map();
+
+    // ====== Utils ======
+    const el = s => document.querySelector(s);
+    const fmt = v => `₹${v}`;
+    function showToast(msg, type='info'){
+      const t = el('#toast');
+      t.textContent = msg;
+      t.className = `toast ${type} show`;
+      setTimeout(()=> t.className = 'toast', 2400);
+    }
+
+    // ====== Render recipes ======
+    function renderRecipes(){
+      const grid = el('#recipe-grid'); grid.innerHTML = '';
+      recipes.forEach(r=>{
+        const wrap = document.createElement('div'); wrap.className = 'recipe';
+        wrap.innerHTML = `
+          <div class="recipe-img">${r.emoji}</div>
+          <div class="recipe-body">
+            <h3>${r.name} <span class="price">${fmt(r.price)}</span></h3>
+            <div class="muted"><strong>Ingredients:</strong> ${r.ingredients}</div>
+            <div class="muted"><strong>Steps:</strong> ${r.steps}</div>
+            <div class="controls">
+              <button class="btn btn-primary" data-add="${r.id}" aria-label="Add ${r.name} to cart">Add to cart</button>
+              ${r.prep ? `
+                <input class="time" type="time" id="time-${r.id}" placeholder="HH:MM" aria-label="Select delivery time"/>
+                <button class="btn btn-prep" data-prep="${r.id}" aria-label="Prepare ${r.name}">Prepare</button>
+              ` : `<span class="muted">Instant item</span>`}
+            </div>
+            ${r.prep ? `
+              <div style="margin-top:8px">
+                <div class="progress"><div class="bar" id="bar-${r.id}"></div></div>
+                <div class="notif" id="notif-${r.id}">✅ ${r.name} is ready! Time's up — take it from the canteen.</div>
+              </div>
+            `:''}
+          </div>
+        `;
+        grid.appendChild(wrap);
+      });
+
+      // Add to cart
+      grid.querySelectorAll('[data-add]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const id = btn.getAttribute('data-add');
+          addToCart(id, 1);
+        });
+      });
+
+      // Prepare
+      grid.querySelectorAll('[data-prep]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const id = btn.getAttribute('data-prep');
+          const timeVal = (el(`#time-${id}`)?.value || '').trim();
+          if(!timeVal){ showToast('Select a delivery time for preparation.', 'warn'); return; }
+          addToCart(id, 1, timeVal);
+          openPrepareModal(id);
+        });
+      });
+    }
+
+    // ====== Cart operations ======
+    function addToCart(id, qty=1, time=null){
+      const r = recipes.find(x=>x.id===id);
+      if(!r){ showToast('Item not found.', 'warn'); return; }
+      const it = cart.get(id);
+      if(it){
+        it.qty += qty;
+        if(time) it.time = time;
+        cart.set(id, it);
+      } else {
+        cart.set(id, {
+          id:r.id, name:r.name, price:r.price, qty,
+          time: time || null, status:'pending', timerId:null, progress:0
+        });
+      }
+      renderCart();
+      showToast('Item added to cart.', 'success');
+    }
+
+    function updateQty(id, delta){
+      const it = cart.get(id); if(!it) return;
+      it.qty += delta;
+      if(it.qty <= 0){
+        if(it.timerId){ clearTimeout(it.timerId); it.timerId = null; }
+        cart.delete(id);
+      } else {
+        cart.set(id, it);
+      }
+      renderCart();
+    }
+
+    function removeItem(id){
+      const it = cart.get(id);
+      if(it && it.timerId){ clearTimeout(it.timerId); }
+      cart.delete(id);
+      renderCart();
+    }
+
+    function cartTotal(){
+      let sum = 0; cart.forEach(it=> sum += it.price * it.qty); return sum;
+    }
+
+    // ====== Prepare modal flow ======
+    let pendingPrepareId = null;
+    function openPrepareModal(id){
+      pendingPrepareId = id;
+      el('#modal').style.display = 'flex';
+      const it = cart.get(id);
+      el('#modal-body').innerHTML = `
+        <div style="margin-bottom:8px"><strong>${it?.name || ''}</strong> — ${fmt(it?.price || 0)} × ${it?.qty || 1}</div>
+        <div>Chosen time: <strong>${it?.time || 'Not set'}</strong></div>
+        <div style="margin-top:10px; color:#374151">Select a payment method or use the False Payment strip below to start preparing your item.</div>
+      `;
+    }
+    function closePrepareModal(){
+      pendingPrepareId = null;
+      el('#modal').style.display = 'none';
+    }
+
+    function startPreparing(id){
+      const it = cart.get(id); if(!it){ showToast('Item not in cart.', 'warn'); return; }
+      if(!it.time){ showToast('Please set a delivery time.', 'warn'); openPrepareModal(id); return; }
+
+      const [hh, mm] = it.time.split(':').map(Number);
+      const now = new Date();
+      const target = new Date(); target.setHours(hh, mm, 0, 0);
+      let delay = target.getTime() - now.getTime();
+      if(delay < 0){ delay = 5000; } // demo fallback
+
+      it.status = 'preparing';
+      it.progress = 80;
+      if(it.timerId){ clearTimeout(it.timerId); }
+
+      const bar = el(`#bar-${id}`); if(bar) bar.style.width = '80%';
+
+      it.timerId = setTimeout(()=>{
+        it.status = 'ready';
+        it.progress = 100;
+        cart.set(id, it);
+        renderCart();
+
+        // Update UI
+        const bar2 = el(`#bar-${id}`); if(bar2) bar2.style.width = '100%';
+        const notif = el(`#notif-${id}`);
+        if(notif){
+          notif.style.display = 'block';
+          notif.textContent = `✅ ${it.name} is ready! Time's up — take it from the canteen.`;
+        }
+
+        // Browser notification
+        if(Notification.permission === "granted"){
+          new Notification(`${it.name} ready! Time's up — take it from the canteen.`);
+        } else {
+          Notification.requestPermission().then(p=>{
+            if(p==="granted") new Notification(`${it.name} ready! Time's up — take it from the canteen.`);
+          });
+        }
+        showToast(`${it.name} is ready — collect from canteen.`, 'success');
+      }, delay);
+
+      cart.set(id, it);
+      renderCart();
+      closePrepareModal();
+
+      const whenStr = delay===5000 ? 'in a few seconds (demo)' : `at ${it.time}`;
+      showToast(`Preparing ${it.name} — will be ready ${whenStr}`, 'info');
+    }
+
+    // ====== Render cart ======
+    function renderCart(){
+      const body = el('#cart-items'); body.innerHTML = '';
+      cart.forEach(it=>{
+        const isPrepItem = recipes.find(r=>r.id===it.id)?.prep;
+        const statusClass =
+          it.status==='pending'   ? 'status-pending'   :
+          it.status==='preparing' ? 'status-preparing' : 'status-ready';
+
+        const progressPct =
+          it.status==='preparing' ? (it.progress||80) : it.status==='ready' ? 100 : 0;
+
+        const row = document.createElement('div'); row.className = 'cart-item';
+        row.innerHTML = `
+          <div>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+              <strong>${it.name}</strong>
+              <span class="status-chip ${statusClass}">
+                ${it.status==='pending' ? 'Pending' : it.status==='preparing' ? 'Preparing' : 'Ready'}
+              </span>
+            </div>
+            <div class="muted">${fmt(it.price)} each</div>
+            ${isPrepItem ? `
+              <div style="margin-top:6px">
+                <div class="progress"><div class="bar" id="bar-${it.id}" style="width:${progressPct}%"></div></div>
+                <div class="notif" id="notif-${it.id}">✅ ${it.name} is ready! Time hoye gechhe — canteen theke niye jao.</div>
+              </div>
+            ` : `<div class="muted" style="margin-top:6px">Instant item · No prepare required</div>`}
+          </div>
+
+          <div>
+            <div class="qty">
+              <button data-dec="${it.id}" aria-label="Decrease quantity">−</button>
+              <span>${it.qty}</span>
+              <button data-inc="${it.id}" aria-label="Increase quantity">+</button>
+            </div>
+          </div>
+
+          <div>
+            ${isPrepItem ? `<input class="time-small" type="time" value="${it.time || ''}" data-time="${it.id}" title="Delivery time"/>` : `<span class="muted">—</span>`}
+          </div>
+
+          <div><strong>${fmt(it.price * it.qty)}</strong></div>
+
+          <div style="display:flex; gap:8px; align-items:center">
+            ${isPrepItem ? `<button class="prepare" data-prepare="${it.id}">${it.status==='ready' ? 'Ready' : 'Prepare'}</button>` : ''}
+            <button class="remove" data-remove="${it.id}">Remove</button>
+          </div>
+        `;
+        body.appendChild(row);
+      });
+
+      // Bind qty/remove/time/prepare
+      body.querySelectorAll('[data-inc]').forEach(b=> b.addEventListener('click', ()=> updateQty(b.getAttribute('data-inc'), +1)));
+      body.querySelectorAll('[data-dec]').forEach(b=> b.addEventListener('click', ()=> updateQty(b.getAttribute('data-dec'), -1)));
+      body.querySelectorAll('[data-remove]').forEach(b=> b.addEventListener('click', ()=> removeItem(b.getAttribute('data-remove'))));
+      body.querySelectorAll('[data-time]').forEach(inp=>{
+        inp.addEventListener('change', ()=>{
+          const id = inp.getAttribute('data-time');
+          const it = cart.get(id); if(!it) return;
+          it.time = inp.value;
+          cart.set(id, it);
+          showToast(`Time set for ${it.name}: ${it.time}`, 'info');
+        });
+      });
+      body.querySelectorAll('[data-prepare]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const id = btn.getAttribute('data-prepare');
+          const it = cart.get(id);
+          if(it?.status==='ready'){ showToast(`${it.name} is already ready.`, 'info'); return; }
+          if(!it?.time){ showToast('Please set a delivery time first.', 'warn'); return; }
+          openPrepareModal(id);
+        });
+      });
+
+      // Totals
+      const count = Array.from(cart.values()).reduce((a,c)=> a + c.qty, 0);
+      el('#cart-count').textContent = `${count} item${count!==1?'s':''}`;
+      el('#cart-total').textContent = fmt(cartTotal());
+
+      updatePaymentUI();
+    }
+
+    // ====== Clear & Checkout ======
+    el('#clear-cart').addEventListener('click', ()=>{
+      cart.forEach(it=>{ if(it.timerId) clearTimeout(it.timerId); });
+      cart.clear();
+      renderCart();
+      showToast('Cart cleared.', 'info');
+    });
+    el('#checkout').addEventListener('click', ()=>{
+      if(cart.size===0){ showToast('Your cart is empty.', 'warn'); return; }
+      showToast('Select a payment method or use False Payment strip, then click Prepare.', 'info');
+      el('#payments').scrollIntoView({ behavior:'smooth' });
+    });
+
+    // ====== Payments method switching ======
+    const methodRadios = document.querySelectorAll('input[name="paymethod"]');
+    methodRadios.forEach(r=> r.addEventListener('change', onMethodChange));
+    function onMethodChange(){
+      const val = document.querySelector('input[name="paymethod"]:checked')?.value || 'UPI';
+      el('#upi-box').style.display   = (val==='UPI') ? 'block':'none';
+      el('#qr-box').style.display    = (val==='QR')  ? 'block':'none';
+      el('#card-box').style.display  = (val==='CARD')? 'block':'none';
+      el('#cod-box').style.display   = (val==='COD') ? 'block':'none';
+    }
+
+    function updatePaymentUI(){
+      const hasItems = cart.size > 0;
+      ['#upi-pay','#qr-confirm','#card-pay','#cod-confirm','#false-pay'].forEach(id=>{
+        const btn = el(id); if(!btn) return;
+        btn.classList.toggle('disabled', !hasItems);
+      });
+    }
+
+    // ====== Payment handlers (demo; trigger startPreparing) ======
+    el('#upi-pay').addEventListener('click', ()=>{
+      if(cart.size===0){ showToast('Cart is empty.', 'warn'); return; }
+      const upiId = el('#upi-id').value.trim();
+      if(!upiId || !upiId.includes('@')){ showToast('Enter a valid UPI ID.', 'warn'); return; }
+      showToast(`UPI request sent to ${upiId}.`, 'success');
+      if(pendingPrepareId){ startPreparing(pendingPrepareId); }
+    });
+    el('#qr-confirm').addEventListener('click', ()=>{
+      if(cart.size===0){ showToast('Cart is empty.', 'warn'); return; }
+      showToast('QR payment marked as completed.', 'success');
+      if(pendingPrepareId){ startPreparing(pendingPrepareId); }
+    });
+    el('#card-pay').addEventListener('click', ()=>{
+      if(cart.size===0){ showToast('Cart is empty.', 'warn'); return; }
+      const num = el('#card-number').value.trim();
+      const exp = el('#card-exp').value.trim();
+      const cvv = el('#card-cvv').value.trim();
+      if(num.length < 12 || !exp || cvv.length < 3){ showToast('Enter valid card details.', 'warn'); return; }
+      showToast('Card payment processed (demo).', 'success');
+      if(pendingPrepareId){ startPreparing(pendingPrepareId); }
+    });
+    el('#cod-confirm').addEventListener('click', ()=>{
+      if(cart.size===0){ showToast('Cart is empty.', 'warn'); return; }
+      showToast('COD confirmed. Pay at counter during pickup.', 'success');
+      if(pendingPrepareId){ startPreparing(pendingPrepareId); }
+    });
+
+    // ====== False Payment (global strip) ======
+    // For hackathon demo: proceed without real payment
+    el('#false-pay').addEventListener('click', ()=>{
+      if(cart.size===0){ showToast('Cart is empty.', 'warn'); return; }
+      showToast('Payment skipped (False Payment). Proceeding...', 'success');
+
+      // If a prepare modal is open, immediately start for that item
+      if(pendingPrepareId){
+        startPreparing(pendingPrepareId);
+        return;
+      }
+
+      // Otherwise, start for all items that have a time set and are not ready yet
+      cart.forEach(it=>{
+        if(it.time && it.status!=='ready'){
+          // Instantly mark preparing and schedule
+          it.status = 'preparing'; it.progress = 80;
+          cart.set(it.id, it);
+          const bar = el(`#bar-${it.id}`); if(bar) bar.style.width = '80%';
+          scheduleReadyAtTime(it.id);
+        }
+      });
+      renderCart();
+    });
+
+    // ====== Schedule ready at exact time ======
+    function scheduleReadyAtTime(id){
+      const it = cart.get(id); if(!it || !it.time) return;
+      const [hh, mm] = it.time.split(':').map(Number);
+      const now = new Date();
+      const target = new Date(); target.setHours(hh, mm, 0, 0);
+      let delay = target.getTime() - now.getTime();
+      if(delay < 0) delay = 5000; // demo fallback
+
+      if(it.timerId) clearTimeout(it.timerId);
+      it.timerId = setTimeout(()=>{
+        it.status = 'ready';
+        it.progress = 100;
+        cart.set(id, it);
+        renderCart();
+
+        const bar = el(`#bar-${id}`); if(bar) bar.style.width = '100%';
+        const notif = el(`#notif-${id}`);
+        if(notif){
+          notif.style.display = 'block';
+          notif.textContent = `✅ ${it.name} is ready! Time's up — take it from the canteen.`;
+        }
+
+        if(Notification.permission === "granted"){
+          new Notification(`${it.name} ready! Time's up — take it from the canteen.`);
+        } else {
+          Notification.requestPermission().then(p=>{
+            if(p==="granted") new Notification(`${it.name} ready! Time's up — take it from the canteen.`);
+          });
+        }
+        showToast(`${it.name} is ready — collect from canteen.`, 'success');
+      }, delay);
+
+      cart.set(id, it);
+    }
+
+    // ====== Modal actions ======
+    el('#modal-close').addEventListener('click', closePrepareModal);
+    el('#modal-cancel').addEventListener('click', closePrepareModal);
+    el('#modal-ok').addEventListener('click', ()=>{
+      closePrepareModal();
+      el('#payments').scrollIntoView({ behavior:'smooth' });
+      showToast('Complete or simulate payment to start preparing.', 'info');
+    });
+
+    // ====== Init ======
+    renderRecipes();
+    renderCart();
+    onMethodChange();
+  </script>
+</body> </html>
+<!-- Firebase App (the core Firebase SDK) -->
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
+
+<<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
+
+<!-- Firebase Initialization -->
+<script>
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  function saveOrder(cartItems) {
+    db.collection('orders').add({
+      items: cartItems,
+      time: new Date()
+    }).then(() => alert('Order saved!'))
+      .catch(err => alert('Error: ' + err.message));
+  }
+</script>
+
+<!-- Your main JS -->
+<script src="canteen.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MSIT Canteen</title>
+
+  <!-- ===== Firebase Analytics (GA4) ===== -->
+  <!-- Replace G-XXXXXXXXXX with your Measurement ID from Firebase -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX'); // <-- your GA4 Measurement ID
+  </script>
+
+  <!-- ===== Firebase SDKs ===== -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
+
+  <!-- Your CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Your canteen HTML content here -->
+  <button id="checkout">Checkout</button>
+
+  <!-- ===== Firebase Initialization ===== -->
+  <script>
+    
